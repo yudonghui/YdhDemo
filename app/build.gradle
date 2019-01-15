@@ -1,0 +1,53 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion versions.compileSdkVersion
+    defaultConfig {
+        applicationId "com.railway.ydhdemo"
+        minSdkVersion versions.minSdkVersion
+        targetSdkVersion versions.targetSdkVersion
+        versionCode versions.versionCode
+        versionName versions.versionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            // true - 打开混淆
+            minifyEnabled true
+            // true - 打开资源压缩 移除无用的resource文件
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:appcompat-v7:$versions.appcompat_v7"
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    api "com.jakewharton:butterknife:$versions.butterknife"
+    annotationProcessor "com.jakewharton:butterknife-compiler:$versions.butterknife"
+
+    // Retrofit库
+    api "com.squareup.retrofit2:retrofit:$versions.retrofit"
+    api "com.squareup.retrofit2:converter-gson:$versions.retrofit"
+    api "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
+   // api 'com.google.guava:guava:20.0'
+    //Rxjava库
+    api "io.reactivex.rxjava2:rxandroid:$versions.rxjava"
+    api "io.reactivex.rxjava2:rxjava:$versions.rxjava"
+    //rxlifecycle用于管理生命周期，避免内存溢出
+    api "com.trello.rxlifecycle2:rxlifecycle:$versions.rxjava"
+    api "com.trello.rxlifecycle2:rxlifecycle-components:$versions.rxjava"
+    // Okhttp库
+    api "com.squareup.okhttp3:okhttp:$versions.okhttp"
+    api "com.squareup.okhttp3:logging-interceptor:$versions.okhttp"
+    //dagger时候添加的依赖
+    api "com.google.dagger:dagger:$versions.dagger"
+    annotationProcessor "com.google.dagger:dagger-compiler:$versions.dagger"
+}
