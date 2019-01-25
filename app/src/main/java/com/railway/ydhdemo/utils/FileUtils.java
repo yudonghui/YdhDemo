@@ -20,9 +20,11 @@ public class FileUtils {
         File file = null;
         String state = Environment.getExternalStorageState();
         if (state.equals(Environment.MEDIA_MOUNTED)) {
-            file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/xungen.apk");
+            LogUtils.e(Environment.getExternalStorageDirectory().getAbsolutePath() + "/ydh.apk");
+            file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/ydh.apk");
         } else {
-            file = new File(App.getContext().getCacheDir().getAbsolutePath() + "/xungen.apk");
+            LogUtils.e(App.getContext().getCacheDir().getAbsolutePath() + "/ydh.apk");
+            file = new File(App.getContext().getCacheDir().getAbsolutePath() + "/ydh.apk");
         }
         return file;
     }

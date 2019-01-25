@@ -1,16 +1,11 @@
 package com.railway.ydhdemo;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -19,15 +14,13 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.railway.ydhdemo.base.BaseActivity;
-import com.railway.ydhdemo.callback.DialogHintInterface;
+import com.railway.ydhdemo.callback.YuDialogInterface;
+import com.railway.ydhdemo.common.Constant;
 import com.railway.ydhdemo.component.ActivityAppComponent;
-import com.railway.ydhdemo.dialog.HintDialog;
+import com.railway.ydhdemo.dialog.YuDialog;
 import com.railway.ydhdemo.ui.bean.UploadBean;
 import com.railway.ydhdemo.ui.bean.User;
-import com.railway.ydhdemo.ui.bean.VersionInfo;
 import com.railway.ydhdemo.ui.presenter.MainPresenter;
-import com.railway.ydhdemo.utils.AppInfo;
-import com.railway.ydhdemo.utils.FileUtils;
 import com.railway.ydhdemo.utils.LogUtils;
 
 import java.io.File;
@@ -69,6 +62,12 @@ public class MainActivity extends BaseActivity<MainPresenter> {
         HashMap<String, String> params = new HashMap<>();
         params.put("type", "android");
         mPresenter.getVersionInfo(params);
+     /*   HomeFragment homeFragment = new HomeFragment();
+        FragmentManager supportFragmentManager = getSupportFragmentManager();
+
+        FragmentTransaction fragmentTransaction = supportFragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.fl, homeFragment).show(homeFragment);
+        fragmentTransaction.commit();*/
     }
 
     /**
@@ -106,53 +105,49 @@ public class MainActivity extends BaseActivity<MainPresenter> {
             Log.e("结果", user.toString());
     }
 
-    public void setVersionInfo(VersionInfo versionInfo) {
+    public void checkSDPermission() {
+        requestPermission(new String[]{
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE});
+    }
 
-        if (versionInfo == null) return;
-        int currentCode = AppInfo.getAppVersionCode();
-        VersionInfo.DataBean data = versionInfo.getData();
-        String status = data.getStatus();
-        String netCode = data.getBuild();
-        String version = data.getVersion();
-        String remark = data.getRemark();
-        final String apkUrl = data.getDownload_url();
-        if (currentCode < Integer.parseInt(netCode)) {
-            //强制更新
-            //如果版本本地的版本号和发布的版本号不同，那么就提示是否更新
-            HintDialog mHintDialog = new HintDialog(mContext);
-            mHintDialog.setTitleVisiable(true);
-            mHintDialog.setTitle("发现新版本 " + version);
-            //verName,updateInfo
-            mHintDialog.setVersionMessage("【更新说明】\n" + remark);
-            mHintDialog.setMessage("发现新版本 " + version + "\n\n" + "【更新说明】\n" + remark);
-            //HintDialogUtils.setTvCancel("以后再说");
-            mHintDialog.setConfirm("立即更新", new DialogHintInterface() {
+    @Override
+    public void permissonExcute() {
+        checkIsAndroid();
+    }
 
-                @Override
-                public void callBack(View view) {
-                    checkSDPermission(apkUrl);
-                }
-            });
-            if ("1".equals(status)) {
-                mHintDialog.setCancelable(false);
-                mHintDialog.setVisibilityCancel();
+    private void checkIsAndroid() {
+        // updateApk();
+        if (Build.VERSION.SDK_INT >= 26) {
+            boolean b = getPackageManager().canRequestPackageInstalls();
+            if (b) {
+                updateApk();
             } else {
-                mHintDialog.setTvCancel("以后再说");
+                dialog();
             }
+        } else {
+            updateApk();
         }
     }
 
-    private void checkSDPermission(String apkUrl) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String[] permissions = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, permissions, 11111);
-            } else {
-                updateApk(apkUrl);
-            }
-        } else {
-            updateApk(apkUrl);
-        }
+    private void dialog() {
+        YuDialog.Builder builder = new YuDialog.Builder();
+        builder.title(getResources().getString(R.string.hint_title))
+                .message(getResources().getString(R.string.hint_message))
+                .confirm(getResources().getString(R.string.setting), new YuDialogInterface() {
+                    @Override
+                    public void callBack(View view) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + mContext.getPackageName()));
+                        startActivityForResult(intent, Constant.REQUEST_6666);
+                    }
+                })
+                .cancel(getResources().getString(R.string.cancel), new YuDialogInterface() {
+                    @Override
+                    public void callBack(View view) {
+                        showToast("取消了");
+                    }
+                })
+                .build(mContext);
     }
 
     public void setUpload(ResponseBody body) {
@@ -167,63 +162,9 @@ public class MainActivity extends BaseActivity<MainPresenter> {
 
     }
 
-    public void setUpdateApk(final ResponseBody body) {
-        final File file = FileUtils.createFile();
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setCancelable(false);
-        progressDialog.setCanceledOnTouchOutside(false);
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressDialog.setMessage("努力下载中......");
-        progressDialog.show();
-        progressDialog.setMax(100);
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                FileUtils.writeFile2Disk(body, file, new FileUtils.FileLoadInterface() {
-                    @Override
-                    public void onLoading(final long current, final long total) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                // LogUtils.e("current: " + current + " total：" + total);
-                                int cur = (int) (current * 100 / total);
-                                progressDialog.setProgress(cur);
-                                if (cur == 100) {
-                                    Toast.makeText(mContext, "下载成功", Toast.LENGTH_SHORT).show();
-                                    progressDialog.dismiss();
-                                    //安装apk
-                                    Intent intent = new Intent();
-                                    //执行动作
-                                    intent.setAction(Intent.ACTION_VIEW);
-                                    Uri mUri;
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        //添加这一句表示对目标应用临时授权该Uri所代表的文件
-                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                        //通过FileProvider创建一个content类型的Uri
-                                        mUri = FileProvider.getUriForFile(mContext, "com.ruihuo.ixungen.FileProvider", file);
-                                        intent.putExtra(MediaStore.EXTRA_OUTPUT, mUri);
-                                    } else {
-                                        mUri = Uri.fromFile(file);
-                                        intent.putExtra(MediaStore.EXTRA_OUTPUT, mUri);
-                                    }
-                                    //执行的数据类型
-                                    intent.setDataAndType(mUri, "application/vnd.android.package-archive");
-                                    mContext.startActivity(intent);
-                                    System.exit(0);
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-        }.start();
-
-    }
-
     //下载文件
-    private void updateApk(String download_url) {
-        mPresenter.download(download_url);
+    private void updateApk() {
+        mPresenter.download();
     }
 
     private long firstTime;
@@ -244,4 +185,12 @@ public class MainActivity extends BaseActivity<MainPresenter> {
         return super.onKeyDown(keyCode, event);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == Constant.REQUEST_6666) {//是否允许安装未知来源apk，返回。
+            checkIsAndroid();
+        } else if (requestCode == Constant.REQUEST_6667) {//自己去设置里面开启权限后 返回
+            checkSDPermission();
+        }
+    }
 }

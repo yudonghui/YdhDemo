@@ -42,7 +42,7 @@ public abstract class SimpleFragment extends RxFragment {
         super.onViewCreated(view, savedInstanceState);
         mUnbinder = ButterKnife.bind(this, mView);
         isBinder = true;
-        initView();
+        init();
     }
 
     public void showLoadingDialog() {
@@ -66,7 +66,10 @@ public abstract class SimpleFragment extends RxFragment {
 
     protected abstract int getLayoutId();
 
-    protected abstract void initView();
+    protected void init() {
+    }
+
+    ;
 
     /**
      * 通过Class跳转界面

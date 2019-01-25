@@ -5,58 +5,34 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.FileProvider;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.railway.ydhdemo.MainActivity;
+import com.railway.ydhdemo.App;
 import com.railway.ydhdemo.base.BasePresenter;
 import com.railway.ydhdemo.callback.ResponseCallBack;
 import com.railway.ydhdemo.callback.YuDialogInterface;
 import com.railway.ydhdemo.common.CommonSubscriber;
 import com.railway.ydhdemo.dialog.YuDialog;
-import com.railway.ydhdemo.ui.bean.User;
-import com.railway.ydhdemo.ui.bean.UserInfo;
 import com.railway.ydhdemo.ui.bean.VersionInfo;
-import com.railway.ydhdemo.ui.model.MainModel;
+import com.railway.ydhdemo.ui.fragment.HomeFragment;
+import com.railway.ydhdemo.ui.model.HomeModel;
 import com.railway.ydhdemo.utils.ApiException;
 import com.railway.ydhdemo.utils.AppInfo;
 import com.railway.ydhdemo.utils.FileUtils;
-import com.railway.ydhdemo.utils.LogUtils;
 import com.railway.ydhdemo.utils.StringUtil;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
 
-import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 
-public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
+public class HomePresenter extends BasePresenter<HomeFragment, HomeModel> {
     @Inject
-    public MainPresenter() {
-        Log.e("创建了: ", "MainPresenter");
+    public HomePresenter() {
     }
-
-    public void get(HashMap<String, String> params) {
-        mView.showLoadingDialog();
-        mModel.get(params, new CommonSubscriber<User>() {
-            @Override
-            public void getData(User user) {
-                mView.cancelLoadingDialog();
-                mView.getSuccess(user);
-            }
-
-            @Override
-            public void error(ApiException e) {
-                Toast.makeText(mView, e.getMsg(), Toast.LENGTH_SHORT).show();
-                mView.cancelLoadingDialog();
-            }
-        });
-    }
-
     private VersionInfo.DataBean data;
 
     public void getVersionInfo(HashMap<String, String> params) {
@@ -86,7 +62,7 @@ public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
                             })
                             .isCancel(!"1".equals(status))//弹出框是否可以取消
                             .cancel("1".equals(status) ? "" : "以后再说")
-                            .build(mView);
+                            .build(mView.getContext());
                 }
 
 
@@ -94,46 +70,11 @@ public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
 
             @Override
             public void error(ApiException e) {
-                Toast.makeText(mView, e.getMsg(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(mView.getContext(), e.getMsg(), Toast.LENGTH_SHORT).show();
                 mView.cancelLoadingDialog();
             }
         });
     }
-
-    public void getUserInfo(HashMap<String, String> params) {
-        mView.showLoadingDialog();
-        mModel.getUserInfo(params, new CommonSubscriber<UserInfo>() {
-            @Override
-            public void getData(UserInfo userInfo) {
-                mView.cancelLoadingDialog();
-                Log.e("结果", userInfo.toString());
-                // mView.setVersionInfo(versionInfo);
-            }
-
-            @Override
-            public void error(ApiException e) {
-                Toast.makeText(mView, e.getMsg(), Toast.LENGTH_SHORT).show();
-                mView.cancelLoadingDialog();
-            }
-        });
-    }
-
-    public void upload(Map<String, RequestBody> params) {
-        mView.showLoadingDialog();
-        mModel.upload(params, new ResponseCallBack() {
-            @Override
-            public void callBack(ResponseBody body) {
-                mView.cancelLoadingDialog();
-                mView.setUpload(body);
-            }
-
-            @Override
-            public void complete() {
-                mView.cancelLoadingDialog();
-            }
-        });
-    }
-
     public void download() {
         if (data == null || StringUtil.isNullOrEmpty(data.getDownload_url())) {
             return;
@@ -142,7 +83,7 @@ public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
             @Override
             public void callBack(final ResponseBody body) {
                 final File file = FileUtils.createFile();
-                final ProgressDialog progressDialog = new ProgressDialog(mView);
+                final ProgressDialog progressDialog = new ProgressDialog(mView.getContext());
                 progressDialog.setCancelable(false);
                 progressDialog.setCanceledOnTouchOutside(false);
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -156,14 +97,13 @@ public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
                         FileUtils.writeFile2Disk(body, file, new FileUtils.FileLoadInterface() {
                             @Override
                             public void onLoading(final long current, final long total) {
-                                mView.runOnUiThread(new Runnable() {
+                                mView.getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         // LogUtils.e("current: " + current + " total：" + total);
                                         int cur = (int) (current * 100 / total);
                                         progressDialog.setProgress(cur);
                                         if (cur == 100) {
-                                            Toast.makeText(mView, "下载成功", Toast.LENGTH_SHORT).show();
                                             progressDialog.dismiss();
                                             //安装apk
                                             Intent intent = new Intent();
@@ -174,8 +114,7 @@ public class MainPresenter extends BasePresenter<MainActivity, MainModel> {
                                                 //添加这一句表示对目标应用临时授权该Uri所代表的文件
                                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                                 //通过FileProvider创建一个content类型的Uri
-                                                LogUtils.e(mView.getPackageName());
-                                                mUri = FileProvider.getUriForFile(mView, mView.getPackageName() + ".FileProvider", file);
+                                                mUri = FileProvider.getUriForFile(mView.getContext(), App.getContext().getPackageName() + ".FileProvider", file);
                                             } else {
                                                 mUri = Uri.fromFile(file);
                                             }

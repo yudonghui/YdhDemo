@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -23,7 +24,7 @@
         </activity>
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.railway.ydhdemo.fileprovider"
+            android:authorities="com.railway.ydhdemo.FileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

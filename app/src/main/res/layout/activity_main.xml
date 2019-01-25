@@ -25,4 +25,9 @@
         android:text="文件上传"
         android:textColor="@color/colorAccent"
         android:textSize="20sp" />
+
+    <FrameLayout
+        android:id="@+id/fl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></FrameLayout>
 </LinearLayout>

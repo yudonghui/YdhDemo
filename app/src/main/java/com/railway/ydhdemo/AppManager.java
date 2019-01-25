@@ -142,6 +142,18 @@ public class AppManager {
     }
 
     /**
+     * 获取Activity栈中的栈顶的Activity
+     * 需要注意的是，栈是先进后出，所以最上面的Activity是集合中的最后一个
+     */
+    public static Activity getTopActivity() {
+        if (activityStack.isEmpty()) {  //Activity栈为空
+            return null;
+        } else {  //不为空时
+            return activityStack.get(activityStack.size() - 1);
+        }
+    }
+
+    /**
      * 是否已经打开指定的activity
      *
      * @param cls
