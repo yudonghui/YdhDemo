@@ -4,10 +4,11 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.core.content.FileProvider;
 
 import com.railway.ydhdemo.MainActivity;
 import com.railway.ydhdemo.base.BasePresenter;

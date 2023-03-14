@@ -6,13 +6,7 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ArrayRes;
-import android.support.annotation.AttrRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.annotation.StyleRes;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -20,6 +14,15 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import androidx.annotation.ArrayRes;
+import androidx.annotation.AttrRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.annotation.StyleRes;
+import androidx.appcompat.app.AlertDialog;
 
 /**
  * Created by Android on 2018/4/24.
@@ -193,9 +196,9 @@ public abstract class YuAlertDialog {
 
     private static class Api20Dialog extends YuAlertDialog {
 
-        private android.support.v7.app.AlertDialog alertDialog;
+        private AlertDialog alertDialog;
 
-        private Api20Dialog(android.support.v7.app.AlertDialog alertDialog) {
+        private Api20Dialog(AlertDialog alertDialog) {
             this.alertDialog = alertDialog;
         }
 
@@ -592,14 +595,14 @@ public abstract class YuAlertDialog {
 
     private static class Api20Builder implements Builder {
 
-        private android.support.v7.app.AlertDialog.Builder builder;
+        private AlertDialog.Builder builder;
 
         private Api20Builder(@NonNull Context context) {
             this(context, 0);
         }
 
         private Api20Builder(@NonNull Context context, @StyleRes int themeResId) {
-            builder = new android.support.v7.app.AlertDialog.Builder(context, themeResId);
+            builder = new AlertDialog.Builder(context, themeResId);
         }
 
         @NonNull
